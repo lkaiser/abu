@@ -51,5 +51,4 @@ for f in args.files :
     c = f.read().replace('\x00', '')
     print f.name
     print "ssh %s%s%s # %s"%(port(c), username(c), hostname(c), password(c))
-
 #useage  python SecureCRTDecrypt.py 129.226.57.141.ini
