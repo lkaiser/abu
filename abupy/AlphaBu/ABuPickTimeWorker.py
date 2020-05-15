@@ -144,14 +144,14 @@ class AbuPickTimeWorker(AbuPickTimeWorkBase):
         """专属择时买入因子的择时卖出因子任务：日任务择时卖出因子， 周任务择时卖出因子，月任务择时卖出因子"""
 
         for buy_factor in self.buy_factors:
-            # 筛选出当前买入因子所对应的所有单子, 注意这里使用buy_factor_class不是buy_factor，buy_factor带参数做为唯一标示
+            # 筛选出当前买入因子所对应的所有单子, 注意这里使用buy_factor_class不是buy_factor，buy_factor带参数做为唯一标示  factor_orders:跟当前买入因子相关的所有order
             factor_orders = list(filter(lambda order: order.buy_factor_class == buy_factor.__class__.__name__,
                                         self.orders))
             if len(factor_orders) == 0:
                 # 当前因子没有对应单子
                 continue
 
-            # TODO 不要使用字符串进行eq比对
+            # TODO 不要使用字符串进行eq比对 buy_factor.sell_factors：跟当前买入因子相关的所有卖出因子
             for sell_factor in buy_factor.sell_factors:
                 if how == 'day':
                     # 所有日任务都要用read_fit_day，且一定存在
@@ -263,7 +263,7 @@ class AbuPickTimeWorker(AbuPickTimeWorkBase):
                 raise ValueError('factor class key must name class !!!')
 
             factor_class_cp = copy.deepcopy(factor_class)
-            # pop出类信息后剩下的都为类需要的参数
+            # pop出类信息后剩下的都为类需要的参数,看代码真的要仔细，人家都说清楚了，所以你需要的参数都在factor_class里
             class_fac = factor_class_cp.pop('class')
             # 整合capital，kl_pd等实例化因子对象
             factor = class_fac(self.capital, self.kl_pd, self.combine_kl_pd, self.benchmark, **factor_class_cp)

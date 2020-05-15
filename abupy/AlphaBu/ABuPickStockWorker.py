@@ -11,6 +11,7 @@ from __future__ import division
 
 import copy
 
+from abupy.TradeBu.KFinManager import KFinManager
 from .ABuPickBase import AbuPickStockWorkBase
 from ..MarketBu.ABuMarket import all_symbol
 from ..PickStockBu.ABuPickStockBase import AbuPickStockBase
@@ -35,6 +36,7 @@ class AbuPickStockWorker(AbuPickStockWorkBase):
         self.benchmark = benchmark
         self.choice_symbols = choice_symbols
         self.kl_pd_manager = kl_pd_manager
+        self.fin_manager = KFinManager()
         self.stock_pickers = []
         self.first_stock_pickers = []
         self.init_stock_pickers(stock_pickers)
