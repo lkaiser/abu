@@ -1,5 +1,7 @@
 #-*-coding:utf-8-*-
+from abupy.UtilBu import ABuRegUtil
 from .ABuPickStockBase import AbuPickStockBase
+import numpy as np
 
 __author__ = 'k'
 
@@ -14,9 +16,9 @@ class KPickStockValue(AbuPickStockBase):
         pass
 
     def fit_first_choice(self, pick_worker, choice_symbols, *args, **kwargs):
+        """ 毛利率大于 35 且近两年roe >15 ，且现金流匹配度要"""
         ast = pick_worker.fin_manager.get_assetAliability()
         basic  = pick_worker.fin_manager.get_stock_daily_basic()
-        fin = pick_worker.fin_manager.get_finindicator()
-        basic[(fin.grossprofit_margin>30) &]
-        #income = get_income
+        fin = pick_worker.fin_manager.get_finindicator_flat()
+        return fin[(fin.roe_dt_2>15) & (fin.grossprofit_margin>35)].ts_code.values.tolist()
         pass
