@@ -13,7 +13,7 @@ class FinDataSource(object):
     def __init__(self):
         ts.set_token(ABuEnv.tushare_key)
         self.api = ts.pro_api()
-        self.client = pymongo.MongoClient(host=ABuEnv.mongo_url,unicode_decode_error_handler='ignore')
+        self.client = pymongo.MongoClient(host=ABuEnv.mongo_url,unicode_decode_error_handler='ignore').quantaxis
         self.INTERVAL = 0.2
 
     def save_stock_daily_basic(self,ind,start, end):

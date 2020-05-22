@@ -57,9 +57,9 @@ class KFinManager(object):
                 dic['op_yoy_%d' % i] = np.where(i >= roe_dt_year.shape[0], roe_dt_year.op_yoy[0:i].mean(), np.nan)
 
             end_date = df.iloc[0].end_date
-            dic['roe_dt_year'] = int(df.iloc[0].roe_dt) * 12 / int(end_date[4:5])
+            dic['roe_dt_year'] = int(df.iloc[0].roe_dt) * 12 / int(end_date[4:6])
             dic['end_date'] = end_date
             dic['ann_code'] = df.iloc[0].ann_date
-            dic['ts_code'] = df.iloc[0].ts_code
+            #dic['ts_code'] = df.iloc[0].ts_code
             return pd.Series(dic)
         return fin.groupby('ts_code').apply(_value_worth)
