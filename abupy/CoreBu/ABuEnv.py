@@ -216,6 +216,9 @@ class EMarketSourceType(Enum):
     """新浪 美股"""
     E_MARKET_SOURCE_sn_us = 3
 
+    E_MARKET_SOURCE_ts = 4
+    """tushare 数据源"""
+
     """新浪 国内期货"""
     E_MARKET_SOURCE_sn_futures = 100
     """新浪 国际期货"""
@@ -226,10 +229,10 @@ class EMarketSourceType(Enum):
 
 
 """默认设置数据源使用E_MARKET_SOURCE_bd"""
-g_market_source = EMarketSourceType.E_MARKET_SOURCE_bd
+g_market_source = EMarketSourceType.E_MARKET_SOURCE_ts
 
 """自定义的私有数据源类，默认None"""
-g_private_data_source = None
+g_private_data_source  = None
 
 
 # TODO 缩短 E_MARKET_TARGET_US－>US
@@ -351,6 +354,12 @@ g_data_fetch_mode = EMarketDataFetchMode.E_DATA_FETCH_NORMAL
 
 """是否开启ipython example 环境，默认关闭False"""
 _g_enable_example_env_ipython = False
+
+""" tushare key"""
+tushare_key = "0f7da64f6c87dfa58456e0ad4c7ccf31d6c6e89458dc5b575e028c64"
+
+"""mongo setting"""
+mongo_url = "mongodb://172.16.11.139:20000"
 
 
 def enable_example_env_ipython(show_log=True, check_cn=True):

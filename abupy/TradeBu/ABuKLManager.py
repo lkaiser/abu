@@ -31,6 +31,7 @@ __weixin__ = 'abu_quant'
 @add_process_env_sig
 def gen_dict_pick_time_kl_pd(target_symbols, capital, benchmark, show_progress=True):
     """
+    klManager 负责查找选股，择时的kl 数据，并缓存到内存中
     在AbuKLManager中batch_get_pick_time_kl_pd批量获取择时时间序列中使用做为并行多进程委托方法
     :param target_symbols: 请求的symbol
     :param capital: 资金类AbuCapital实例化对象 （实现中暂时不使用其中信息）
@@ -229,7 +230,7 @@ class AbuKLManager(object):
         对外获取选股时段金融时间序列，首先在内部择时字典中寻找，没找到使用_fetch_pick_stock_kl_pd获取，且保存选股字典
         :param target_symbol: 选股symbol
         :param xd: 选股周期（默认一年的交易日长度）
-        :param min_xd: 对fetch的选股金融序列进行过滤参数，即最小金融序列长度
+        :param min_xd: 对fetch的选股金融序列进行过滤参数，即最小金融序列长度,即想要获取xd长度的数据，但实际长度未达到min_xd，则抛弃
         :return:
         """
 
@@ -259,3 +260,5 @@ class AbuKLManager(object):
         # 第三层字典{xd: kl_pd}
         self.pick_kl_pd_dict['pick_stock'][target_symbol] = {xd: kl_pd}
         return kl_pd
+
+

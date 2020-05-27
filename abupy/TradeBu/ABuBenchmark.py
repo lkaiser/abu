@@ -31,7 +31,6 @@ class AbuBenchmark(PickleStateMixin):
             self.n_folds = n_folds
             self.kl_pd = benchmark_kl_pd
             return
-
         if benchmark is None:
             if ABuEnv.g_market_target == EMarketTargetType.E_MARKET_TARGET_US:
                 # 美股
