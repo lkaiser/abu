@@ -16,7 +16,6 @@ import math
 import sqlite3 as sqlite
 
 import pandas as pd
-
 from ..CoreBu.ABuEnv import EMarketTargetType, EMarketSubType
 from ..CoreBu import ABuEnv
 from ..MarketBu import ABuNetWork
@@ -26,6 +25,8 @@ from ..MarketBu.ABuDataParser import SNFuturesParser, SNFuturesGBParser, HBTCPar
 from ..UtilBu import ABuStrUtil, ABuDateUtil, ABuMd5
 from ..UtilBu.ABuDTUtil import catch_error
 from ..CoreBu.ABuDeprecated import AbuDeprecated
+from ..MarketBu.KSymbolFin import FinDataSource
+import datetime
 # noinspection PyUnresolvedReferences
 from ..CoreBu.ABuFixes import xrange, range, filter
 
@@ -80,7 +81,35 @@ def query_symbol_from_pinyin(pinyin):
             # 如果是美股要截取.
             end = code.find('.')
         return code[start:end]
+class TSApi(StockBaseMarket, SupportMixin):
+    def __init__(self, symbol):
+        """
+        :param symbol: Symbol类型对象
+        """
+        super(TSApi, self).__init__(symbol)
+        self.ds = FinDataSource()
 
+    def _support_market(self):
+        """声明数据源支持美股"""
+        return [EMarketTargetType.E_MARKET_TARGET_CN]
+
+    def kline(self, n_folds=2, start=None, end=None):
+        if start is None or end is None:
+            end_year = datetime.datetime.now().strftime("%Y-%m-%d")
+            start_year = str(int(end_year[:4]) - n_folds + 1)+'-01-01'
+        else:
+            start_year = start
+            end_year = end
+        df = self.ds.get_index_daily(start_year,end_year,[self._symbol.symbol_code])
+        pre_close = df.close.shift(1)
+        pre_close[0] = pre_close[1]
+        df.loc[:,'pre_close'] = pre_close
+        df.loc[:,'date'] = df.date.str.replace('-', '')
+        df.index = df.date.values
+        return df
+    def minute(self, n_fold=5, *args, **kwargs):
+        """分钟k线接口"""
+        raise NotImplementedError('SNUSApi minute NotImplementedError!')
 
 class BDApi(StockBaseMarket, SupportMixin):
     """bd数据源，支持港股，美股，a股"""
@@ -440,3 +469,4 @@ class HBApi(TCBaseMarket, SupportMixin):
     def minute(self, *args, **kwargs):
         """分钟k线接口"""
         raise NotImplementedError('HBApi minute NotImplementedError!')
+
