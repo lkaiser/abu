@@ -117,6 +117,7 @@ def _make_kl_df(symbol, data_mode, n_folds, start, end, benchmark, save):
     :param save: 是否进行网络获取数据后，直接进行本地保存
     :return: (df: 金融时间序列pd.DataFrame对象，save_kl_key: 提供外部进行保存)
     """
+    #print('here')
     df, save_kl_key = kline_pd(symbol, data_mode, n_folds=n_folds, start=start, end=end, save=save)
     if df is not None and df.shape[0] == 0:
         # 把行数＝0的归结为＝None, 方便后续统一处理
