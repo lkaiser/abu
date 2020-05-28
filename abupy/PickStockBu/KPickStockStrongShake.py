@@ -21,6 +21,7 @@ class KPickStockStrongShake(AbuPickStockBase):
         """寻找趋势向上强于指数且振幅较大的"""
         # start = datetime.datetime.now().strftime("%Y%m%d")
         # end = (datetime.datetime.now() + datetime.timedelta(days=-365 * 2)).strftime("%Y%m%d")
+        len(choice_symbols)
         daily = pick_worker.fin_manager.get_stock_daily(self.start,self.end,choice_symbols)
         adj = pick_worker.fin_manager.get_daily_adj(self.start,self.end,choice_symbols)
         daily = daily.merge(adj, left_on=['date', 'code'],right_on=['trade_date', 'ts_code'], how='left').sort_values(['ts_code', 'trade_date'], ascending=True)
