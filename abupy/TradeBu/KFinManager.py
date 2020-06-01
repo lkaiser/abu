@@ -17,7 +17,7 @@ class KFinManager(object):
         self.fin_cache = {}
 
     def get_stock_daily(self, start, end, code=None):
-        return self.ds.get_stock_daily_basic(start,end,code)
+        return self.ds.get_stock_daily(start,end,code)
 
     def get_stock_daily_basic(self, start, end, code=None):
         return self.ds.get_stock_daily_basic(start,end,code)
