@@ -47,7 +47,7 @@ class KPickStockStrongShake(AbuPickStockBase):
                 dic['long_range_rise'] = (lkl[id].adj_close - lkl[0:id].adj_close.min()) / lkl[0:lid].adj_close.min()
             return pd.Series(dic)
         trend_status = daily.groupby('ts_code').apply(_trend)
-        trend_status = trend_status[~trend_status.rise.isnull()]
+        trend_status = trend_status[~trend_status.short_range_shake.isnull()]
         benchmark_deg = round(ABuRegUtil.calc_regress_deg(self.benchmark.kl_pd.close,show=False),4)
         trend_status.loc['short_range_deg_diff'] = trend_status['short_range_deg']-benchmark_deg
         return trend_status[(trend_status.long_range_rise<1.6) & (trend_status.short_range_relation<-0.5) & (trend_status.short_range_shake>0.04) &(trend_status.short_range_deg_diff>0) & (trend_status.short_range_deg<0)].index.values.tolist()
