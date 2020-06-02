@@ -356,7 +356,7 @@ g_data_fetch_mode = EMarketDataFetchMode.E_DATA_FETCH_NORMAL
 _g_enable_example_env_ipython = False
 
 """ tushare key"""
-tushare_key = "0f7da64f6c87dfa58456e0ad4c7ccf31d6c6e89458dc5b575e028c64"
+tushare_key = "336338dd7818a35bcf3e313c120ec8e36328cdfd2df0ea820a534bb4"
 
 """mongo setting"""
 mongo_url = "mongodb://172.16.11.139:20000"
