@@ -29,25 +29,27 @@ class KPickStockStrongShake(AbuPickStockBase):
         daily.loc[:, 'adj_close'] = daily.close * daily.adj_factor
         def _trend(df):
             dic = {}
-            sdate = (datetime.strptime(self.end, "%Y%m%d")+ datetime.timedelta(days=-self.short_range)).strftime("%Y%m%d")
-            ldate = (datetime.strptime(self.end, "%Y%m%d")+ datetime.timedelta(days=-400)).strftime("%Y%m%d")
-            df.reindex()
+            sdate = (datetime.datetime.strptime(self.end, "%Y%m%d")+ datetime.timedelta(days=-self.short_range)).strftime("%Y%m%d")
+            ldate = (datetime.datetime.strptime(self.end, "%Y%m%d")+ datetime.timedelta(days=-400)).strftime("%Y%m%d")
+            df = df.reset_index(drop=True)
             kl = df[df.trade_date > sdate]
             lkl = df[df.trade_date > ldate]
+            d_index = kl[['date','code']].merge(self.benchmark.kl_pd[['date','close','pre_close']], on=['date'])
             if kl.shape > 15:
                 pre_close = kl.close.shift(1)
                 pre_close[0] = pre_close[1]
-                kl.loc[:,'rise'] = ((pre_close/kl.close-1)*100).round(2)
+                kl.loc[:,'rise'] = ((kl.close/pre_close-1)*100).round(2)
                 dic['short_range_deg'] = round(ABuRegUtil.calc_regress_deg(kl.adj_close,show=False),4)
                 dic['short_range_shake'] = ((kl.high-kl.low)/kl.low).mean()
-                benchmark_rise = self.benchmark.kl_pd[self.benchmark.kl_pd.date>sdate].pre_close - self.benchmark.kl_pd[self.benchmark.kl_pd.date>sdate].close
+                #benchmark_rise = self.benchmark.kl_pd[self.benchmark.kl_pd.date>sdate].close - self.benchmark.kl_pd[self.benchmark.kl_pd.date>sdate].pre_close
+                benchmark_rise = d_index.close - d_index.pre_close
                 dic['short_range_relation'] = round(corr_xy(kl.rise,benchmark_rise,ECoreCorrType.E_CORE_TYPE_PEARS),4)
                 id = kl.adj_close.idxmax()
                 dic['short_range_rise'] = (kl[id].adj_close-kl[0:id].adj_close.min())/kl[0:id].adj_close.min()
                 lid = lkl.adj_close.idxmax()
                 dic['long_range_rise'] = (lkl[id].adj_close - lkl[0:id].adj_close.min()) / lkl[0:lid].adj_close.min()
             return pd.Series(dic)
-        print(daily.head(5))
+        #print(daily.head(5))
         trend_status = daily.groupby('ts_code').apply(_trend)
         #print(trend_status.head(5))
         trend_status = trend_status[~trend_status.short_range_shake.isnull()]
