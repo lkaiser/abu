@@ -13,12 +13,12 @@ ABuEnv.g_market_target = EMarketTargetType.E_MARKET_TARGET_CN
 def batchpick():
 
 
-    #stock_pickers = [{'class': KPickStockValue,'first_choice':True,'start':'20180101','end':'20200526'},
-    #                 {'class': KPickStockStrongShake, 'first_choice': True,'start':'20180101','end':'20200526', 'short_range': 30,'short_scope':1.15,'long_scope':1.6}]
-    stock_pickers = [{'class': KPickStockValue,'first_choice':True,'start':'20180101','end':'20200526'}]
+    stock_pickers = [{'class': KPickStockValue,'first_choice':True,'start':'20180101','end':'20200526'},
+                     {'class': KPickStockStrongShake, 'first_choice': True,'start':'20180101','end':'20200526', 'short_range': 30,'short_scope':1.15,'long_scope':1.6}]
+    #stock_pickers = [{'class': KPickStockValue,'first_choice':True,'start':'20180101','end':'20200526'}]
     #                  'threshold_ang_min': 0.0, 'reversed': False}]
     fin_manager = KFinManager()
-    choice_symbols = fin_manager.get_stock_basic().ts_code.values()
+    choice_symbols = fin_manager.get_stock_basic().ts_code
     benchmark = AbuBenchmark()
     capital = AbuCapital(1000000, benchmark)
 
