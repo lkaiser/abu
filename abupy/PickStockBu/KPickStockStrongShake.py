@@ -34,8 +34,8 @@ class KPickStockStrongShake(AbuPickStockBase):
             df = df.reset_index(drop=True)
             kl = df[df.trade_date > sdate]
             lkl = df[df.trade_date > ldate]
-            d_index = kl[['date','code']].merge(self.benchmark.kl_pd[['date','close','pre_close']], on=['date'])
-            if kl.shape > 15:
+            if kl.shape[0] > 15:
+                d_index = kl[['date', 'code']].merge(self.benchmark.kl_pd[['date', 'close', 'pre_close']], on=['date'])
                 pre_close = kl.close.shift(1)
                 pre_close[0] = pre_close[1]
                 kl.loc[:,'rise'] = ((kl.close/pre_close-1)*100).round(2)
