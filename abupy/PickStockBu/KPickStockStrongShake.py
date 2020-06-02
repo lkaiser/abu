@@ -22,10 +22,11 @@ class KPickStockStrongShake(AbuPickStockBase):
         # start = datetime.datetime.now().strftime("%Y%m%d")
         # end = (datetime.datetime.now() + datetime.timedelta(days=-365 * 2)).strftime("%Y%m%d")
         daily = pick_worker.fin_manager.get_stock_daily(self.start,self.end,[symbol[0:6] for symbol in choice_symbols])
+        daily.loc[:, 'date'] = daily.date.str.replace('-', '')  # tdx 与 tushare数据结构不一致，统一转化成yyyyMMdd格式
         adj = pick_worker.fin_manager.get_daily_adj(self.start,self.end,choice_symbols)
-        daily = daily.merge(adj, left_on=['date', 'code'],right_on=['trade_date', 'ts_code'], how='left').sort_values(['ts_code', 'trade_date'], ascending=True)
+        adj.loc[:, 'code'] = adj.ts_code.str[0:6] # tdx 与 tushare数据结构不一致
+        daily = daily.merge(adj, left_on=['date', 'code'],right_on=['trade_date', 'code'], how='left').sort_values(['ts_code', 'trade_date'], ascending=True)
         daily.loc[:, 'adj_close'] = daily.close * daily.adj_factor
-        daily.loc[:,'date'] = daily.date.str.replace('-', '') #tdx 与 tushare数据结构不一致，统一转化成yyyyMMdd格式
         def _trend(df):
             dic = {}
             sdate = (datetime.strptime(self.end, "%Y%m%d")+ datetime.timedelta(days=-self.short_range)).strftime("%Y%m%d")
@@ -46,7 +47,9 @@ class KPickStockStrongShake(AbuPickStockBase):
                 lid = lkl.adj_close.idxmax()
                 dic['long_range_rise'] = (lkl[id].adj_close - lkl[0:id].adj_close.min()) / lkl[0:lid].adj_close.min()
             return pd.Series(dic)
+        print(daily.head(5))
         trend_status = daily.groupby('ts_code').apply(_trend)
+        #print(trend_status.head(5))
         trend_status = trend_status[~trend_status.short_range_shake.isnull()]
         benchmark_deg = round(ABuRegUtil.calc_regress_deg(self.benchmark.kl_pd.close,show=False),4)
         trend_status.loc['short_range_deg_diff'] = trend_status['short_range_deg']-benchmark_deg
