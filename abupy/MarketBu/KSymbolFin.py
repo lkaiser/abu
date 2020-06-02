@@ -9,6 +9,10 @@ import time
 import json
 from odo import odo
 
+import sys
+reload(sys)
+sys.setdefaultencoding('utf8')
+
 class FinDataSource(object):
     def __init__(self):
         ts.set_token(ABuEnv.tushare_key)
