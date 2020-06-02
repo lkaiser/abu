@@ -19,7 +19,7 @@ def batchpick():
     #                  'threshold_ang_min': 0.0, 'reversed': False}]
     fin_manager = KFinManager()
     choice_symbols = fin_manager.get_stock_basic().ts_code
-    benchmark = AbuBenchmark()
+    benchmark = AbuBenchmark(start='2018-01-01',end='2020-05-18')
     capital = AbuCapital(1000000, benchmark)
 
     print('ABuPickStockExecute.do_pick_stock_work:\n',
@@ -30,7 +30,7 @@ def batchpick():
 
 if __name__ == '__main__':
     ABuEnv.g_data_fetch_mode = EMarketDataFetchMode.E_DATA_FETCH_FORCE_NET
-    batchpick()
+    #batchpick()
     #ABuEnv.enable_example_env_ipython()
-    #benchmark = AbuBenchmark()
+    benchmark = AbuBenchmark(start='2018-01-01',end='2020-05-18')
     #print(benchmark.kl_pd)
