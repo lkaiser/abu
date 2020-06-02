@@ -27,7 +27,6 @@ class KPickStockStrongShake(AbuPickStockBase):
         adj.loc[:, 'code'] = adj.ts_code.str[0:6] # tdx 与 tushare数据结构不一致
         daily = daily.merge(adj, left_on=['date', 'code'],right_on=['trade_date', 'code'], how='left').sort_values(['ts_code', 'trade_date'], ascending=True)
         daily.loc[:, 'adj_close'] = daily.close * daily.adj_factor
-
         def _trend(df):
             dic = {}
             sdate = (datetime.datetime.strptime(self.end, "%Y%m%d")+ datetime.timedelta(days=-self.short_range)).strftime("%Y%m%d")
