@@ -22,5 +22,5 @@ class KPickStockValue(AbuPickStockBase):
 
         fin = fin[(fin.roe_dt_2 > 15) & (fin.grossprofit_margin > 35) &(fin.grossprofit_margin_recent_deg2>0)]
         #根据输入choice_symbols 取交集
-        return set(fin.index.values).intersection(set(choice_symbols)) if choice_symbols is not None else fin.index.values.list()
+        return set(fin.index.str.replace('.', '').values).intersection(set(choice_symbols)) if (choice_symbols is not None and len(choice_symbols) > 0) else fin.index.str.replace('.', '').values.list()
 
