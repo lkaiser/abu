@@ -16,6 +16,7 @@ class FinDataSource(object):
         self.client = pymongo.MongoClient(host=ABuEnv.mongo_url,unicode_decode_error_handler='ignore').quantaxis
         self.INTERVAL = 0.2
 
+
     def save_stock_daily_basic(self,ind,start, end):
         df = self.api.stock_basic()
         if df.empty:
@@ -44,6 +45,9 @@ class FinDataSource(object):
                 odo(daily, stock_daily)
                 # json_data = json.loads(df.reset_index().to_json(orient='records'))
             print(" Save data to stock_daily_basic_tushare collection， OK")
+
+    def get_stock_basic(self):
+        return self.api.stock_basic()
 
     def get_index_daily(self,start, end, code=None):
         query = {"date": {
