@@ -12,6 +12,10 @@ class KPickStockStrongShake(AbuPickStockBase):
         self.short_range = kwargs['short_range']
         self.short_scope = kwargs['short_scope']
         self.long_scope = kwargs['long_scope']
+        self.short_relation = kwargs['short_relation']
+        self.short_shake = kwargs['short_shake']
+        self.short_range_deg_diff = kwargs['short_range_deg_diff']
+        self.short_range_deg = kwargs['short_range_deg_diff']
         self.start = kwargs['start']
         self.end = kwargs['end']
 
@@ -34,7 +38,7 @@ class KPickStockStrongShake(AbuPickStockBase):
         daily.loc[:, 'adj_close'] = daily.close * daily.adj_factor
 
         sdate = (datetime.datetime.strptime(self.end, "%Y%m%d") + datetime.timedelta(days=-self.short_range)).strftime("%Y%m%d")
-        ldate = (datetime.datetime.strptime(self.end, "%Y%m%d") + datetime.timedelta(days=-400)).strftime("%Y%m%d")
+        ldate = (datetime.datetime.strptime(self.end, "%Y%m%d") + datetime.timedelta(days=-self.long_scope)).strftime("%Y%m%d")
 
         def _trend(df):
             dic = {}
@@ -60,4 +64,11 @@ class KPickStockStrongShake(AbuPickStockBase):
         trend_status = trend_status[~trend_status.short_range_shake.isnull()]
         benchmark_deg = round(ABuRegUtil.calc_regress_deg(self.benchmark.kl_pd[self.benchmark.kl_pd.date>sdate].close,show=False),4)
         trend_status.loc[:,'short_range_deg_diff'] = trend_status['short_range_deg']-benchmark_deg
-        return trend_status[(trend_status.long_range_rise<0.6) & (trend_status.short_range_relation<-0.5) & (trend_status.short_range_shake>0.04) &(trend_status.short_range_deg_diff>0) & (trend_status.short_range_deg<0)].index.values.tolist()
+        trend_status = trend_status[(trend_status.long_range_rise<self.long_scope) & (trend_status.short_range_rise<self.short_scope) & (trend_status.short_range_relation<self.short_relation)]
+        if self.short_shake is not None:
+            trend_status = trend_status[trend_status.short_range_shake > self.short_shake]
+        if self.short_range_deg_diff is not None:
+            trend_status = trend_status[trend_status.short_range_deg_diff > self.short_range_deg_diff]
+        if self.short_range_deg is not None:
+            trend_status = trend_status[trend_status.short_range_deg < self.short_range_deg]
+        return trend_status.index.values.tolist()

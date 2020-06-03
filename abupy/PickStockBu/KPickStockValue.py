@@ -8,6 +8,10 @@ class KPickStockValue(AbuPickStockBase):
         """通过kwargs设置位条件，配置因子参数"""
         self.start = kwargs['start']
         self.end = kwargs['end']
+        self.roe_dt_2 = kwargs['roe_dt_2']
+        self.grossprofit_margin = kwargs['grossprofit_margin']
+        self.grossprofit_margin_recent_deg2 = kwargs['grossprofit_margin_recent_deg2']
+
         #self.first_choice
 
     def fit_pick(self, kl_pd, target_symbol):
@@ -20,7 +24,7 @@ class KPickStockValue(AbuPickStockBase):
         #basic  = pick_worker.fin_manager.get_stock_daily_basic()
         fin = pick_worker.fin_manager.get_finindicator_flat(self.start,self.end)
 
-        fin = fin[(fin.roe_dt_2 > 15) & (fin.grossprofit_margin > 35) &(fin.grossprofit_margin_recent_deg2>0)]
+        fin = fin[(fin.roe_dt_2 > self.roe_dt_2) & (fin.grossprofit_margin > self.grossprofit_margin) &(fin.grossprofit_margin_recent_deg2>self.grossprofit_margin_recent_deg2)]
         #根据输入choice_symbols 取交集
         return list(set(fin.index.values).intersection(set(choice_symbols))) if (choice_symbols is not None and len(choice_symbols) > 0) else fin.index.values.list()
 
