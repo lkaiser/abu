@@ -9,8 +9,8 @@ class KPickStockValue(AbuPickStockBase):
         self.start = kwargs['start']
         self.end = kwargs['end']
         self.roe_dt_2 = kwargs['roe_dt_2']
-        self.grossprofit_margin = kwargs['grossprofit_margin']
-        self.grossprofit_margin_recent_deg2 = kwargs['grossprofit_margin_recent_deg2']
+        self.grossprofit_margin = kwargs['grossprofit_margin'] if 'grossprofit_margin' in kwargs else None
+        self.grossprofit_margin_recent_deg2 = kwargs['grossprofit_margin_recent_deg2'] if 'grossprofit_margin_recent_deg2' in kwargs else None
 
         #self.first_choice
 

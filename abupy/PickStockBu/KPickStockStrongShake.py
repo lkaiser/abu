@@ -12,10 +12,10 @@ class KPickStockStrongShake(AbuPickStockBase):
         self.short_range = kwargs['short_range']
         self.short_scope = kwargs['short_scope']
         self.long_scope = kwargs['long_scope']
-        self.short_relation = kwargs['short_relation']
-        self.short_shake = kwargs['short_shake']
-        self.short_range_deg_diff = kwargs['short_range_deg_diff']
-        self.short_range_deg = kwargs['short_range_deg_diff']
+        self.short_relation = kwargs['short_relation'] if 'short_relation' in kwargs else None
+        self.short_shake = kwargs['short_shake'] if 'short_shake' in kwargs else None
+        self.short_range_deg_diff = kwargs['short_range_deg_diff'] if 'short_range_deg_diff' in kwargs else None
+        self.short_range_deg = kwargs['short_range_deg_diff'] if 'short_range_deg_diff' in kwargs else None
         self.start = kwargs['start']
         self.end = kwargs['end']
 
