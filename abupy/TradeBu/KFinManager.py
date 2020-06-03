@@ -19,8 +19,6 @@ class KFinManager(object):
     def get_stock_basic(self):
         return self.ds.get_stock_basic()
 
-    def get_stock_daily(self, start, end, code=None):
-        return self.ds.get_stock_daily(start,end,code)
 
     def get_stock_daily(self, start, end, code=None):
         return self.ds.get_stock_daily(start,end,code)
