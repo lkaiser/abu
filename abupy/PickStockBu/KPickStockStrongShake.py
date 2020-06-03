@@ -27,9 +27,6 @@ class KPickStockStrongShake(AbuPickStockBase):
         """寻找趋势向上强于指数且振幅较大的"""
         # start = datetime.datetime.now().strftime("%Y%m%d")
         # end = (datetime.datetime.now() + datetime.timedelta(days=-365 * 2)).strftime("%Y%m%d")
-        print(self.start)
-        print(self.end)
-        print(choice_symbols)
         daily = pick_worker.fin_manager.get_stock_daily(self.start[0:4]+'-'+self.start[4:6]+'-'+self.start[6:8],self.end[0:4]+'-'+self.end[4:6]+'-'+self.end[6:8],[symbol[0:6] for symbol in choice_symbols])
         daily.loc[:, 'date'] = daily.date.str.replace('-', '')  # tdx 与 tushare数据结构不一致，统一转化成yyyyMMdd格式
         adj = pick_worker.fin_manager.get_daily_adj(self.start,self.end,choice_symbols)
@@ -58,9 +55,7 @@ class KPickStockStrongShake(AbuPickStockBase):
                 lid = lkl.adj_close.idxmax()
                 dic['long_range_rise'] = (lkl.iloc[lid].adj_close - lkl.iloc[0:lid].adj_close.min()) / lkl.iloc[0:lid].adj_close.min()
             return pd.Series(dic)
-        print(daily.head())
         trend_status = daily.groupby('ts_code').apply(_trend)
-        print(trend_status.head())
         trend_status = trend_status[~trend_status.short_range_shake.isnull()]
         benchmark_deg = round(ABuRegUtil.calc_regress_deg(self.benchmark.kl_pd[self.benchmark.kl_pd.date>sdate].close,show=False),4)
         trend_status.loc[:,'short_range_deg_diff'] = trend_status['short_range_deg']-benchmark_deg
