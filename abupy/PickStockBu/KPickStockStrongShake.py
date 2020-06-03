@@ -6,6 +6,8 @@ import datetime
 import pandas as pd
 
 class KPickStockStrongShake(AbuPickStockBase):
+    def __str__(self):
+        return "KPickStockStrongShake a"
     def _init_self(self, **kwargs):
         self.short_range = kwargs['short_range']
         self.short_scope = kwargs['short_scope']
