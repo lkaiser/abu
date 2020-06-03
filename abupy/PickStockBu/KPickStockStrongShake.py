@@ -24,7 +24,7 @@ class KPickStockStrongShake(AbuPickStockBase):
         print(self.start)
         print(self.end)
         print(choice_symbols)
-        daily = pick_worker.fin_manager.get_stock_daily(self.start,self.end,[symbol[0:6] for symbol in choice_symbols])
+        daily = pick_worker.fin_manager.get_stock_daily(self.start[0:4]+self.start[4:6]+self.start[6:8],self.end[0:4]+self.end[4:6]+self.end[6:8],[symbol[0:6] for symbol in choice_symbols])
         daily.loc[:, 'date'] = daily.date.str.replace('-', '')  # tdx 与 tushare数据结构不一致，统一转化成yyyyMMdd格式
         adj = pick_worker.fin_manager.get_daily_adj(self.start,self.end,choice_symbols)
         adj.loc[:, 'code'] = adj.ts_code.str[0:6] # tdx 与 tushare数据结构不一致
@@ -38,7 +38,7 @@ class KPickStockStrongShake(AbuPickStockBase):
             kl = df[df.trade_date > sdate].reset_index(drop=True)
             lkl = df[df.trade_date > ldate].reset_index(drop=True)
             if kl.shape[0] > 15:
-                d_index = kl[['date', 'code']].merge(self.benchmark.kl_pd[['date', 'close', 'pre_close']], on=['date'])
+                d_index = kl[['date', 'code']].merge(self.benchmark.kl_pd[['date', 'close', 'pre_close']], on=['date'],how='left')
                 pre_close = kl.close.shift(1).values
                 pre_close[0] = pre_close[1]
                 kl.loc[:,'rise'] = ((kl.close/pre_close-1)*100).round(2)
