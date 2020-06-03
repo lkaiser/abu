@@ -53,6 +53,8 @@ class AbuPickStockWorker(AbuPickStockWorkBase):
         :param stock_pickers:list中元素为dict，每个dict为因子的构造元素，如class，构造参数等
         :return:
         """
+        self.stock_pickers = []
+        self.first_stock_pickers = []
         if stock_pickers is not None:
             for picker_class in stock_pickers:
                 if picker_class is None:
@@ -105,6 +107,7 @@ class AbuPickStockWorker(AbuPickStockWorkBase):
                     progress.show(epoch + 1)
                     # 每一个选股因子通过fit_first_choice对inner_first_choice_symbols进行筛选，滤网一层一层过滤
                     inner_first_choice_symbols = first_choice.fit_first_choice(self, inner_first_choice_symbols)
+                    print(inner_first_choice_symbols)
             return inner_first_choice_symbols
 
         def _batch_fit():
