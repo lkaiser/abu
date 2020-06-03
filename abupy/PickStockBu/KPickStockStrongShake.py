@@ -24,17 +24,18 @@ class KPickStockStrongShake(AbuPickStockBase):
         print(self.start)
         print(self.end)
         print(choice_symbols)
-        daily = pick_worker.fin_manager.get_stock_daily(self.start[0:4]+self.start[4:6]+self.start[6:8],self.end[0:4]+self.end[4:6]+self.end[6:8],[symbol[0:6] for symbol in choice_symbols])
+        daily = pick_worker.fin_manager.get_stock_daily(self.start[0:4]+'-'+self.start[4:6]+'-'+self.start[6:8],self.end[0:4]+'-'+self.end[4:6]+'-'+self.end[6:8],[symbol[0:6] for symbol in choice_symbols])
         daily.loc[:, 'date'] = daily.date.str.replace('-', '')  # tdx 与 tushare数据结构不一致，统一转化成yyyyMMdd格式
         adj = pick_worker.fin_manager.get_daily_adj(self.start,self.end,choice_symbols)
         adj.loc[:, 'code'] = adj.ts_code.str[0:6] # tdx 与 tushare数据结构不一致
         daily = daily.merge(adj, left_on=['date', 'code'],right_on=['trade_date', 'code'], how='left').sort_values(['ts_code', 'trade_date'], ascending=True)
         daily.loc[:, 'adj_close'] = daily.close * daily.adj_factor
 
+        sdate = (datetime.datetime.strptime(self.end, "%Y%m%d") + datetime.timedelta(days=-self.short_range)).strftime("%Y%m%d")
+        ldate = (datetime.datetime.strptime(self.end, "%Y%m%d") + datetime.timedelta(days=-400)).strftime("%Y%m%d")
+
         def _trend(df):
             dic = {}
-            sdate = (datetime.datetime.strptime(self.end, "%Y%m%d")+ datetime.timedelta(days=-self.short_range)).strftime("%Y%m%d")
-            ldate = (datetime.datetime.strptime(self.end, "%Y%m%d")+ datetime.timedelta(days=-400)).strftime("%Y%m%d")
             kl = df[df.trade_date > sdate].reset_index(drop=True)
             lkl = df[df.trade_date > ldate].reset_index(drop=True)
             if kl.shape[0] > 15:
@@ -49,12 +50,12 @@ class KPickStockStrongShake(AbuPickStockBase):
                 id = kl.adj_close.idxmax()
                 dic['short_range_rise'] = (kl.iloc[id].adj_close-kl.iloc[0:id].adj_close.min())/kl.iloc[0:id].adj_close.min()
                 lid = lkl.adj_close.idxmax()
-                dic['long_range_rise'] = (lkl.iloc[id].adj_close - lkl.iloc[0:id].adj_close.min()) / lkl.iloc[0:lid].adj_close.min()
+                dic['long_range_rise'] = (lkl.iloc[lid].adj_close - lkl.iloc[0:lid].adj_close.min()) / lkl.iloc[0:lid].adj_close.min()
             return pd.Series(dic)
         print(daily.head())
         trend_status = daily.groupby('ts_code').apply(_trend)
         print(trend_status.head())
         trend_status = trend_status[~trend_status.short_range_shake.isnull()]
-        benchmark_deg = round(ABuRegUtil.calc_regress_deg(self.benchmark.kl_pd.close,show=False),4)
-        trend_status.loc['short_range_deg_diff'] = trend_status['short_range_deg']-benchmark_deg
-        return trend_status[(trend_status.long_range_rise<1.6) & (trend_status.short_range_relation<-0.5) & (trend_status.short_range_shake>0.04) &(trend_status.short_range_deg_diff>0) & (trend_status.short_range_deg<0)].index.values.tolist()
+        benchmark_deg = round(ABuRegUtil.calc_regress_deg(self.benchmark.kl_pd[self.benchmark.kl_pd.date>sdate].close,show=False),4)
+        trend_status.loc[:,'short_range_deg_diff'] = trend_status['short_range_deg']-benchmark_deg
+        return trend_status[(trend_status.long_range_rise<0.6) & (trend_status.short_range_relation<-0.5) & (trend_status.short_range_shake>0.04) &(trend_status.short_range_deg_diff>0) & (trend_status.short_range_deg<0)].index.values.tolist()
