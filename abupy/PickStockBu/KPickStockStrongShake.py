@@ -11,6 +11,7 @@ class KPickStockStrongShake(AbuPickStockBase):
     def _init_self(self, **kwargs):
         self.short_range = kwargs['short_range']
         self.short_scope = kwargs['short_scope']
+        self.long_range = kwargs['long_range']
         self.long_scope = kwargs['long_scope']
         self.short_relation = kwargs['short_relation'] if 'short_relation' in kwargs else None
         self.short_shake = kwargs['short_shake'] if 'short_shake' in kwargs else None
@@ -60,7 +61,7 @@ class KPickStockStrongShake(AbuPickStockBase):
         benchmark_deg = round(ABuRegUtil.calc_regress_deg(self.benchmark.kl_pd[self.benchmark.kl_pd.date>sdate].close,show=False),4)
         trend_status.loc[:,'short_range_deg_diff'] = trend_status['short_range_deg']-benchmark_deg
         trend_status = trend_status[(trend_status.long_range_rise<self.long_scope) & (trend_status.short_range_rise<self.short_scope)]
-        print('self.long_scope = %d,self.short_scope = %d ' % (self.long_scope,self.short_scope))
+        print('self.long_scope = %d,self.short_scope = %d ,self.long_range = %f,self.short_range = %f' % (self.long_scope,self.short_scope,self.long_range,self.short_range))
         print(trend_status.head())
         if self.short_relation is not None:
             trend_status = trend_status[trend_status.short_range_relation < self.short_relation]
