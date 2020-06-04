@@ -145,3 +145,4 @@ class AbuPickStockWorker(AbuPickStockWorkBase):
         self.choice_symbols = _first_batch_fit()
         # 通过两次迭代继续筛选
         self.choice_symbols = _batch_fit()
+
