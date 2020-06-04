@@ -107,6 +107,7 @@ class AbuPickStockWorker(AbuPickStockWorkBase):
                     progress.show(epoch + 1)
                     # 每一个选股因子通过fit_first_choice对inner_first_choice_symbols进行筛选，滤网一层一层过滤
                     inner_first_choice_symbols = first_choice.fit_first_choice(self, inner_first_choice_symbols)
+                    print(inner_first_choice_symbols)
             return inner_first_choice_symbols
 
         def _batch_fit():
