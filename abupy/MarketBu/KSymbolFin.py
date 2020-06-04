@@ -61,6 +61,7 @@ class FinDataSource(object):
         cursor = self.client.index_day.find(query, {"_id": 0}, batch_size=10000).sort([("code",1),("date",1)])
         return pd.DataFrame([item for item in cursor])
 
+
     def get_stock_daily(self,start, end, code=None):
         query = {"date": {
             "$lte": end,
