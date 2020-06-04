@@ -67,8 +67,8 @@ class FinDataSource(object):
             "$gte": start}}
         if code:
             query['code'] = {'$in': code}
-        cursor = self.client.stock_day.find(query, {"_id": 0}, batch_size=10000).sort([("code",1),("date",1)])
-        return pd.DataFrame([item for item in cursor])
+        cursor = self.client.stock_day.find(query, {"_id": 0}, batch_size=10000)
+        return pd.DataFrame([item for item in cursor]).sort_values(['code', 'date'], ascending=True)
 
     def get_stock_daily_basic(self,start, end, code=None):
         query = {"trade_date": {
