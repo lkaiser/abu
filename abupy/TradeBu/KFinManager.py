@@ -45,6 +45,9 @@ class KFinManager(object):
         return self.ds.get_finindicator(start, end, code)
 
     def get_finindicator_flat(self,start,end):
+        key = start+'-'+end
+        if key in self.fin_cache:
+            return self.fin_cache.get(key)
         fin = self.get_finindicator(start,end).sort_values(['ts_code', 'end_date'], ascending=False)
 
         def _value_worth(df):
@@ -78,4 +81,6 @@ class KFinManager(object):
             dic['debt_to_assets'] = df.iloc[0].debt_to_assets
             #dic['ts_code'] = df.iloc[0].ts_code
             return pd.Series(dic)
-        return fin.groupby('ts_code').apply(_value_worth)
+        val = fin.groupby('ts_code').apply(_value_worth)
+        self.fin_cache[key] = val
+        return val
