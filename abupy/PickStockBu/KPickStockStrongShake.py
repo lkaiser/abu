@@ -22,6 +22,7 @@ class KPickStockStrongShake(AbuPickStockBase):
 
     def fit_pick(self, kl_pd, target_symbol):
         """精挑"""
+
         return True
 
     def fit_first_choice(self, pick_worker, choice_symbols, *args, **kwargs):
@@ -61,7 +62,7 @@ class KPickStockStrongShake(AbuPickStockBase):
                 dic['short_range_shake'] = ((kl.high-kl.low)/kl.low).mean()
                 #benchmark_rise = ((d_index.close/d_index.pre_close-1)*100).round(2)
                 relation_arr = [round(corr_xy(df.iloc[-(self.short_range+i):-i].rise.values, df.iloc[-(self.short_range+i):-i].benchmark_rise.values, ECoreCorrType.E_CORE_TYPE_PEARS), 4) for i in range(1,20)]
-                df.loc[:, 'short_range_relation'] = min(relation_arr) #前20天的relaition 取最小值，因为 relation主要是取30天的，已经做了平滑处理，再取前20天是因为信号不是一出来就有机会，后续需要根据位置判断
+                dic['short_range_relation'] = min(relation_arr) #前20天的relaition 取最小值，因为 relation主要是取30天的，已经做了平滑处理，再取前20天是因为信号不是一出来就有机会，后续需要根据位置判断
                 #dic['short_range_relation'] = round(corr_xy(kl.rise,benchmark_rise,ECoreCorrType.E_CORE_TYPE_PEARS),4)
                 id = kl.adj_close.idxmax()
                 dic['short_range_rise'] = (kl.iloc[id].adj_close-kl.iloc[0:id].adj_close.min())/kl.iloc[0:id].adj_close.min()
