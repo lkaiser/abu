@@ -39,7 +39,11 @@ class KPickStockStrongShake(AbuPickStockBase):
         ldate = (datetime.datetime.strptime(self.end, "%Y%m%d") + datetime.timedelta(days=-self.long_range)).strftime("%Y%m%d")
 
         daily2 = daily[['date', 'code']].merge(self.benchmark.kl_pd[['date', 'close', 'pre_close']], on=['date'], how='left')
-        daily.loc[:,'benchmark_rise'] = ((daily2.close / daily2.pre_close - 1) * 100).round(2)
+        daily.loc[:,'benchmark_rise'] = ((daily2.close / daily2.pre_close - 1) * 100).round(2) #有点错误，不要紧，每只code第一天的rise肯定是错的，因为没分组算
+
+        pre_close = daily.close.shift(1).values
+        pre_close[0] = pre_close[1]
+        daily.loc[:, 'rise'] = ((daily.close / pre_close - 1) * 100).round(2)  #有点错误，不要紧，每只code第一天的rise肯定是错的，因为没分组算
 
         #dic['short_range_relation'] = round(corr_xy(daily.rise, daily.benchmark_rise, ECoreCorrType.E_CORE_TYPE_PEARS), 4)
 
@@ -49,16 +53,16 @@ class KPickStockStrongShake(AbuPickStockBase):
             lkl = df[df.trade_date > ldate].reset_index(drop=True)
 
             if kl.shape[0] > 15:
-                d_index = kl[['date', 'code']].merge(self.benchmark.kl_pd[['date', 'close', 'pre_close']], on=['date'],how='left')
-                pre_close = kl.close.shift(1).values
-                pre_close[0] = pre_close[1]
-                kl.loc[:,'rise'] = ((kl.close/pre_close-1)*100).round(2)
+                #d_index = kl[['date', 'code']].merge(self.benchmark.kl_pd[['date', 'close', 'pre_close']], on=['date'],how='left')
+                #pre_close = kl.close.shift(1).values
+                #pre_close[0] = pre_close[1]
+                #kl.loc[:,'rise'] = ((kl.close/pre_close-1)*100).round(2)
                 dic['short_range_deg'] = round(ABuRegUtil.calc_regress_deg(kl.adj_close,show=False),4)
                 dic['short_range_shake'] = ((kl.high-kl.low)/kl.low).mean()
-                benchmark_rise = ((d_index.close/d_index.pre_close-1)*100).round(2)
+                #benchmark_rise = ((d_index.close/d_index.pre_close-1)*100).round(2)
                 relation_arr = [round(corr_xy(df.iloc[-(self.short_range+i):-i].rise.values, df.iloc[-(self.short_range+i):-i].benchmark_rise.values, ECoreCorrType.E_CORE_TYPE_PEARS), 4) for i in range(1,20)]
                 df.loc[:, 'short_range_relation'] = min(relation_arr) #前20天的relaition 取最小值，因为 relation主要是取30天的，已经做了平滑处理，再取前20天是因为信号不是一出来就有机会，后续需要根据位置判断
-                dic['short_range_relation'] = round(corr_xy(kl.rise,benchmark_rise,ECoreCorrType.E_CORE_TYPE_PEARS),4)
+                #dic['short_range_relation'] = round(corr_xy(kl.rise,benchmark_rise,ECoreCorrType.E_CORE_TYPE_PEARS),4)
                 id = kl.adj_close.idxmax()
                 dic['short_range_rise'] = (kl.iloc[id].adj_close-kl.iloc[0:id].adj_close.min())/kl.iloc[0:id].adj_close.min()
                 lid = lkl.adj_close.idxmax()
