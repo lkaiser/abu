@@ -14,8 +14,10 @@ from .ABuMarket import MarketMixin
 from . import ABuIndustries
 from . import ABuMarketDrawing
 from . import ABuNetWork
+from .KSymbolFin import FinDataSource
 
 __all__ = [
+    'FinDataSource',
     'BaseMarket',
     'FuturesBaseMarket',
     'StockBaseMarket',
