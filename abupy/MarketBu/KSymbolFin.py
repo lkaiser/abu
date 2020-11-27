@@ -34,6 +34,7 @@ class FinDataSource(object):
             return
         stock_daily = self.client.stock_daily_basic_tushare
         today = datetime.datetime.now().strftime("%Y%m%d")
+        start_date = '20150101'
         for i_ in range(ind, len(df.index)):
             ref = stock_daily.find({'ts_code': df.iloc[i_].ts_code}).sort([('trade_date', -1)]).limit(1)
             if ref.count() > 0:
