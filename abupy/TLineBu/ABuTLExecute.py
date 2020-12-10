@@ -45,7 +45,7 @@ def shift_distance(arr, how, slice_start=0, slice_end=-1, color='r', show=True, 
     :param slice_start: 如果arr是子序列切片，切片start值， int
     :param slice_end: 如果arr是子序列切片，切片end值， int
     :param color: 直角三角边框颜色，str对象 eg：'r', 'red'
-    :param show_log: 是否输出位移路程比各个段比值，默认True
+    :param show_log: 是否输出位移路程比各个段比值，默认True、
     :param show: 是否可视化
     :param ps: 是否立即执行plt.show
     :return: h_distance(三角底边距离), v_distance(三角垂直距离),

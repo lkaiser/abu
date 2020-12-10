@@ -18,6 +18,7 @@ from ..UtilBu.ABuDTUtil import singleton
 from ..UtilBu.ABuStrUtil import digit_str
 from ..MarketBu.ABuSymbol import Symbol, code_to_symbol
 from ..CrawlBu.ABuXqConsts import columns_map
+from ..MarketBu.KSymbolFin import FinDataSource
 
 __author__ = '阿布'
 __weixin__ = 'abu_quant'
@@ -143,6 +144,87 @@ class AbuSymbolStockBase(FreezeAttrMixin):
         """
         raise NotImplementedError('NotImplementedError AbuSymbolStockBase symbol_func!!!')
 
+
+@singleton
+@AbuStockBaseWrap()
+class AbuSymbolTS(AbuSymbolStockBase):
+    """a股symbol类，singleton"""
+
+    def __init__(self):
+        """被AbuStockBaseWrap替换__init__，即只需读取a股数据到self.df 后续在类装饰器完成"""
+        self.ds = FinDataSource()
+        self.df = self.ds.get_stock_basic()
+
+    def __contains__(self, item):
+        """成员测试：是否item在self.df.symbol.values中"""
+        return digit_str(item) in self.df.symbol.values
+
+    def __getitem__(self, key):
+        """
+            索引获取：两种模式索引获取：
+            1. 参数key为df的columns名称，返回self.df[key]，即get df的列
+            2. 参数key为股票代码名称，标准化后查询，self.df[self.df.symbol == key]，即get df的行
+        """
+
+        if key in self.df.columns:
+            # 参数key为df的columns名称，get df的行
+            return self.df[key]
+
+        if len(key) > 2:
+            head = key[:2].upper()
+            if head.isalpha():
+                # 头两位是字面，即认为是exchange信息，直接截取df_filter
+                df_filter = self.df[self.df['exchange'] == head]
+                if not df_filter.empty:
+                    if key[2:] in df_filter.symbol.values:
+                        # get df的行信息，即对应股票的所有信息
+                        return df_filter[df_filter.symbol == key[2:]]
+            else:
+                if key in self.df.symbol.values:
+                    # get df的行
+                    return self.df[self.df.symbol == key]
+
+    def symbol_func(self, df):
+        """
+        通过df组装支持ABuSymbolPd.make_kl_df使用的symbol，
+        使用df['exchange'].map(lambda exchange: exchange.lower()) + df['symbol']
+        :param df: pd.DataFrame对象
+        :return: 支持ABuSymbolPd.make_kl_df使用的symbol序列
+        """
+        df_symbol = df['exchange'].map(lambda exchange: exchange.lower()) + df['symbol']
+        return df_symbol.tolist()
+
+    def all_symbol(self, index=False):
+        """
+        获取a股市场中所有股票symbol str对象序列，即a股全市场symbol序列
+        :param index: 是否需要返回a股大盘symbol
+        :return: a股全市场symbol序列
+        """
+
+        all_symbol = (self.df.ts_code.str[7:]+self.df.ts_code.str[:6]).tolist()
+        if index:
+            # 需要返回大盘symbol
+            all_symbol.extend(['{}{}'.format(EMarketSubType.SH.value, symbol) for symbol in Symbol.SH_INDEX])
+            all_symbol.extend(['{}{}'.format(EMarketSubType.SZ.value, symbol) for symbol in Symbol.SZ_INDEX])
+        return all_symbol
+
+    def query_symbol_sub_market(self, code, default=EMarketSubType.SH.value):
+        """
+        查询股票所在的子市场，即交易所信息, A股市场默认返回上证交易所
+        :return: 返回EMarketSubType.value值，即子市场（交易所）字符串对象
+        """
+
+        if code in self:
+            # 忽略一个问题，如果只使用000001不带子市场标识去查询，结果只取第一个，准确查询需要完整标示
+            return self[code].market.values[0].lower()
+
+        # 如果没查到如果首symbol为6，9为判定为sh
+        if code[:1] in ['6', '9']:
+            return EMarketSubType.SH.value
+        # 如果没查到如果首symbol为2，3为判定为sz
+        elif code[:1] in ['2', '3']:
+            return EMarketSubType.SZ.value
+        return default
 
 @singleton
 @AbuStockBaseWrap()

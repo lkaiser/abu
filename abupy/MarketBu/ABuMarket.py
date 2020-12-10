@@ -22,7 +22,7 @@ from ..CoreBu.ABuFixes import KFold, six
 from ..UtilBu.ABuLazyUtil import LazyFunc
 from ..MarketBu.ABuSymbol import Symbol, code_to_symbol
 from ..MarketBu.ABuSymbolFutures import AbuFuturesCn, AbuFuturesGB
-from ..MarketBu.ABuSymbolStock import AbuSymbolCN, AbuSymbolUS, AbuSymbolHK
+from ..MarketBu.ABuSymbolStock import AbuSymbolTS,AbuSymbolCN, AbuSymbolUS, AbuSymbolHK
 
 __author__ = '阿布'
 __weixin__ = 'abu_quant'
@@ -161,6 +161,17 @@ def _all_cn_symbol(index=False):
         return K_SAND_BOX_CN
     return AbuSymbolCN().all_symbol(index=index)
 
+def _all_ts_symbol(index=False):
+    """
+    通过AbuSymbolCN().all_symbol获取A股全市场股票代码
+    :param index: 是否包含指数
+    :return:
+    """
+    # noinspection PyProtectedMember
+    if ABuEnv._g_enable_example_env_ipython:
+        return K_SAND_BOX_CN
+    return AbuSymbolTS().all_symbol(index=index)
+
 
 def _all_hk_symbol(index=False):
     """
@@ -214,7 +225,7 @@ def all_symbol(market=None, ss=False, index=False, value=True):
     if market == EMarketTargetType.E_MARKET_TARGET_US:
         symbols = _all_us_symbol(index)
     elif market == EMarketTargetType.E_MARKET_TARGET_CN:
-        symbols = _all_cn_symbol(index)
+        symbols = _all_ts_symbol(index) #_all_cn_symbol(index) 改为从tushare 获取全部股票代码
     elif market == EMarketTargetType.E_MARKET_TARGET_HK:
         symbols = _all_hk_symbol(index)
     elif market == EMarketTargetType.E_MARKET_TARGET_FUTURES_CN:

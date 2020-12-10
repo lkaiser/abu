@@ -55,19 +55,20 @@ class KFinManager(object):
             dic = {}
             roe_dt_year = df.loc[df.end_date.str.contains('1231')]
             for i in range(2, 5):
-                dic['roe_dt_%d' % i] = np.where(i <= roe_dt_year.shape[0], round(roe_dt_year.roe_dt[0:i].mean(),4), np.nan)
-                dic['roe_dt_deg%d' % i] = np.where(i <= roe_dt_year.shape[0], round(ABuRegUtil.calc_regress_deg(roe_dt_year.roe_dt[0:i][::-1],show=False),4), np.nan)
+                #净资产收益率(扣除非经常损益)
+                dic['roe_dt_%d' % i] = np.where(i <= roe_dt_year.shape[0], round(roe_dt_year.roe_dt[0:i].mean(),4), np.nan)#有则计算近2-5年数据，无则显示nan
+                #dic['roe_dt_deg%d' % i] = np.where(i <= roe_dt_year.shape[0], round(ABuRegUtil.calc_regress_deg(roe_dt_year.roe_dt[0:i][::-1],show=False),4), np.nan)
                 # 销售毛利率
-                dic['grossprofit_margin%d' % i] = np.where(i <= roe_dt_year.shape[0], round(roe_dt_year.grossprofit_margin[0:i].mean(),4), np.nan)
-                dic['grossprofit_margin_deg%d' % i] = np.where(i <= roe_dt_year.shape[0], round(ABuRegUtil.calc_regress_deg(roe_dt_year.grossprofit_margin[0:i][::-1],show=False),4), np.nan)
+                dic['grossprofit_margin_%d' % i] = np.where(i <= roe_dt_year.shape[0], round(roe_dt_year.grossprofit_margin[0:i].mean(),4), np.nan)
+                #dic['grossprofit_margin_deg%d' % i] = np.where(i <= roe_dt_year.shape[0], round(ABuRegUtil.calc_regress_deg(roe_dt_year.grossprofit_margin[0:i][::-1],show=False),4), np.nan)
                 # 扣非净利润
-                dic['profit_dedt%d' % i] = np.where(i <= roe_dt_year.shape[0], round(roe_dt_year.profit_dedt[0:i].mean(),4), np.nan)
-                dic['profit_dedt_deg%d' % i] = np.where(i <= roe_dt_year.shape[0], round(ABuRegUtil.calc_regress_deg(roe_dt_year.profit_dedt[0:i][::-1],show=False),4), np.nan)
+                dic['profit_dedt_%d' % i] = np.where(i <= roe_dt_year.shape[0], round(roe_dt_year.profit_dedt[0:i].mean(),4), np.nan)
+                #dic['profit_dedt_deg%d' % i] = np.where(i <= roe_dt_year.shape[0], round(ABuRegUtil.calc_regress_deg(roe_dt_year.profit_dedt[0:i][::-1],show=False),4), np.nan)
                 # 营业利润同比增长
-                dic['op_yoy_%d' % i] = np.where(i <= roe_dt_year.shape[0], round(roe_dt_year.op_yoy[0:i].mean(),4), np.nan)
+                #dic['op_yoy_%d' % i] = np.where(i <= roe_dt_year.shape[0], round(roe_dt_year.op_yoy[0:i].mean(),4), np.nan)
                 # 经营现金流/经营净收益比值及变动趋势
-                dic['ocf_to_opincome%d' % i] = np.where(i <= roe_dt_year.shape[0], round(roe_dt_year.ocf_to_opincome[0:i].mean(),4), np.nan)
-                dic['ocf_to_opincome_deg%d' % i] = np.where(i <= roe_dt_year.shape[0], round(ABuRegUtil.calc_regress_deg(roe_dt_year.ocf_to_opincome[0:i][::-1],show=False),4), np.nan)
+                dic['ocf_to_opincome_%d' % i] = np.where(i <= roe_dt_year.shape[0], round(roe_dt_year.ocf_to_opincome[0:i].mean(),4), np.nan)
+                #dic['ocf_to_opincome_deg%d' % i] = np.where(i <= roe_dt_year.shape[0], round(ABuRegUtil.calc_regress_deg(roe_dt_year.ocf_to_opincome[0:i][::-1],show=False),4), np.nan)
 
 
 
@@ -76,8 +77,8 @@ class KFinManager(object):
             dic['end_date'] = end_date
             dic['ann_code'] = df.iloc[0].ann_date
             dic['grossprofit_margin'] = df.iloc[0].grossprofit_margin
-            dic['grossprofit_margin_recent_deg2'] = np.where(2 <= roe_dt_year.shape[0], round(ABuRegUtil.calc_regress_deg(roe_dt_year.grossprofit_margin[0:2][::-1],show=False),4), np.nan)
-            dic['grossprofit_margin_recent_deg3'] = np.where(3 <= roe_dt_year.shape[0], round(ABuRegUtil.calc_regress_deg(roe_dt_year.grossprofit_margin[0:3][::-1],show=False),4), np.nan)
+            #dic['grossprofit_margin_recent_deg2'] = np.where(2 <= roe_dt_year.shape[0], round(ABuRegUtil.calc_regress_deg(roe_dt_year.grossprofit_margin[0:2][::-1],show=False),4), np.nan)
+            #dic['grossprofit_margin_recent_deg3'] = np.where(3 <= roe_dt_year.shape[0], round(ABuRegUtil.calc_regress_deg(roe_dt_year.grossprofit_margin[0:3][::-1],show=False),4), np.nan)
             dic['debt_to_assets'] = df.iloc[0].debt_to_assets
             #dic['ts_code'] = df.iloc[0].ts_code
             return pd.Series(dic)

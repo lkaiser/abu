@@ -100,12 +100,18 @@ class TSApi(StockBaseMarket, SupportMixin):
         else:
             start_year = start
             end_year = end
-        df = self.ds.get_index_daily(start_year,end_year,[self._symbol.symbol_code])
-        pre_close = df.close.shift(1)
-        pre_close[0] = pre_close[1]
-        df.loc[:,'pre_close'] = pre_close
-        df.loc[:,'date'] = df.date.str.replace('-', '')
-        df.index = df.date.values
+        q_code = self._symbol.symbol_code+'.'+self._symbol.sub_market.value.upper()
+        #logging.info('############get  kline_pd symbol:{}'.format(q_code))
+        df = self.ds.get_stock_daily(start_year,end_year,[q_code])
+        if df.shape[0] == 0:
+            df = self.ds.get_index_daily(start_year,end_year,[q_code])
+        logging.info('############ kline_pd symbol {} dataframe len:{}'.format(q_code,df.shape[0]))
+        if df.shape[0] >0 :
+            df.loc[:,'preClose'] = df.pre_close.astype(float)
+            df.loc[:,'volume'] = df.vol.astype(float)
+            df.loc[:,'date'] = df.trade_date.astype(int)
+            df.loc[:,'code'] = df.ts_code
+            df.index = df.date.values
         return df
     def minute(self, n_fold=5, *args, **kwargs):
         """分钟k线接口"""

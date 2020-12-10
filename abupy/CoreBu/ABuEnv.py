@@ -305,7 +305,7 @@ class EMarketSubType(Enum):
 
 
 """切换目标操作市场，美股，A股，港股，期货，比特币等，默认美股市场"""
-g_market_target = EMarketTargetType.E_MARKET_TARGET_US
+g_market_target = EMarketTargetType.E_MARKET_TARGET_CN
 
 """市场中1年交易日，默认250日"""
 g_market_trade_year = 250
@@ -359,14 +359,14 @@ _g_enable_example_env_ipython = False
 tushare_key = "336338dd7818a35bcf3e313c120ec8e36328cdfd2df0ea820a534bb4"
 
 """mongo setting"""
-mongo_url = "mongodb://172.16.11.139:20000"
+mongo_url = "mongodb://127.0.0.1:27017"
 
 
 def enable_example_env_ipython(show_log=True, check_cn=True):
     """
     只为在ipython example 环境中运行与书中一样的数据，即读取RomDataBu/csv下的数据
 
-    初始内置在RomDataBu/csv.zip下的数据只有zip压缩包，因为git上面的文件最好不要超过50m，
+初始内置在RomDataBu/csv.zip下的数据只有zip压缩包，因为git上面的文件最好不要超过50m，
     内置测试数据，包括美股，a股，期货，比特币，港股数据初始化在csv.zip中，通过解压zip
     之后将测试数据为csv(老版本都是使用hdf5，但windows用户有些hdf5环境有问题)
     show_log: 是否显示enable example env will only read RomDataBu/df_kl.h5

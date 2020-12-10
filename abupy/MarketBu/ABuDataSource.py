@@ -172,6 +172,7 @@ def kline_pd(symbol, data_mode, n_folds=2, start=None, end=None, save=True):
             # 如果是强制走网络，直接请求使用load_kline_df_net
             return load_kline_df_net(source, temp_symbol, n_folds=n_folds, start=start, end=end, start_int=start_int,
                                      end_int=end_int, save=save), save_kl_key
+        logging.debug(' ###############symbol {} from mongodb '.format(symbol))
         # 检测本地缓存数据是否满足需要，如果需要的数据在存储的数据之间，则可切片放回
         match = False
         if start_int >= df_start_int and end_int <= df_end_int:

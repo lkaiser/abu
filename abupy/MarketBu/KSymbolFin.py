@@ -20,7 +20,7 @@ class FinDataSource(object):
         ts.set_token(ABuEnv.tushare_key)
         self.api = ts.pro_api()
         self.client = pymongo.MongoClient(host=ABuEnv.mongo_url,unicode_decode_error_handler='ignore').quantaxis
-        self.INTERVAL = 0.2
+        self.INTERVAL = 0.3
 
 
 
@@ -34,31 +34,117 @@ class FinDataSource(object):
             return
         stock_daily = self.client.stock_daily_basic_tushare
         today = datetime.datetime.now().strftime("%Y%m%d")
-        start_date = '20150101'
         for i_ in range(ind, len(df.index)):
+            start_date = '20100101'
             ref = stock_daily.find({'ts_code': df.iloc[i_].ts_code}).sort([('trade_date', -1)]).limit(1)
             if ref.count() > 0:
                 start_date = pd.date_range((ref[0]['trade_date']), periods=2, freq='1d').strftime('%Y%m%d').values[-1]  # 取最新日期的下一天，所以，永远只有插入，没有更新
                 print("start_date" + start_date.replace("-", "") + " today" + today.replace("-", ""))
                 if start_date.replace("-", "") > today.replace("-", ""):
                     continue
+            if start_date != today:
+                print('UPDATE stock daily basic Trying updating %s from %s to %s ind = %d' % (df.iloc[i_].ts_code, start_date.replace("-", ""), today.replace("-", ""),i_))
+                time.sleep(self.INTERVAL)
+                try:
+                    daily = self.api.daily_basic(ts_code=df.iloc[i_].ts_code, start_date=start_date.replace("-", ""), end_date=today.replace("-", ""))
+                except Exception as e:
+                    print(e)
+                    time.sleep(30)
+                    daily = self.api.daily_basic(ts_code=df.iloc[i_].ts_code, start_date=start_date.replace("-", ""), end_date=today.replace("-", ""))
+                print(" Get stock daily basic from tushare,days count is %d" % len(daily))
+                if not daily.empty:
+                    # coll = client.stock_daily_basic_tushare
+                    # client.drop_collection(coll)
+                    # odo(daily, stock_daily)
+                    #json_data = QA_util_to_json_from_pandas(daily)
+                    json_data = json.loads(daily.to_json(orient='records'))
+                    stock_daily.insert_many(json_data)
+                print(" Save data to stock_daily_basic_tushare collection， OK")
+
+    def save_index(self):
+        '''指数保存,一共5000多只指数'''
+        pro = ts.pro_api()
+        df = pro.index_basic()
+        df = df.append(pro.index_basic(market='CSI'))
+        df = df.append(pro.index_basic(market='SW'))
+        df = df.append(pro.index_basic(market='SZSE'))
+        df = df.append(pro.index_basic(market='CICC'))
+        income = self.client.index_tushare
+        if not df.empty:
+            income.remove()
+            json_data = json.loads(df.to_json(orient='records'))
+            income.insert_many(json_data)
+
+    def save_index_daily(self,ind=0):
+        '''
+        每日行情
+    输出参数
+
+    名称	类型	描述
+    ts_code	str	股票代码
+    trade_date	str	交易日期
+    open	float	开盘价
+    high	float	最高价
+    low	float	最低价
+    close	float	收盘价
+    pre_close	float	昨收价
+    change	float	涨跌额
+    pct_chg	float	涨跌幅 （未复权，如果是复权请用 通用行情接口 ）
+    vol	float	成交量 （手）
+    amount	float	成交额 （千元）
+
+                add by minijjlk
+
+            在命令行工具 quantaxis 中输入 save stock_income 中的命令
+            :param client:
+            :return:
+            '''
+        pro = ts.pro_api()
+        df = pro.index_basic()
+        df = df.append(pro.index_basic(market='CSI'))
+        df = df.append(pro.index_basic(market='SW'))
+        df = df.append(pro.index_basic(market='SZSE'))
+        df = df.append(pro.index_basic(market='CICC'))
+
+        # print(df.iloc[0:10,])
+        # print(df.iloc[710:725, ])
+        # return
+
+        if df.empty:
+            print("there is no stock info,stock count is %d" % len(df))
+            return
+        report_income = self.client.index_daily_tushare
+        today = datetime.datetime.now().strftime("%Y%m%d")
+        print("##################get mainbz reports start####################")
+        for i_ in range(ind,len(df.index)):
+            start_date = '20100101'
+            print('The %s of Total %s' % (i_, len(df.index)))
+            ref = report_income.find({'ts_code': df.iloc[i_].ts_code}).sort([('trade_date', -1)]).limit(1)
+            if ref.count() > 0:
+                if ref.count() < 200: #数量小于200条的删除重新拿，姑且这么做一把，做完后要删除此处逻辑
+                    report_income.remove({'ts_code': df.iloc[i_].ts_code})
+                else:
+                    start_date = pd.date_range((ref[0]['trade_date']), periods=2, freq='1d').strftime('%Y%m%d').values[-1]  # 取最新日期的下一天，所以，永远只有插入，没有更新
+                    print("start_date" + start_date.replace("-", "") + " today" + today.replace("-", ""))
+                    if start_date.replace("-", "") >= today.replace("-", ""):
+                        continue
             print('UPDATE stock daily basic Trying updating %s from %s to %s' % (df.iloc[i_].ts_code, start_date.replace("-", ""), today.replace("-", "")))
-            time.sleep(self.INTERVAL)
+            time.sleep(0.9)
             try:
-                daily = self.api.daily_basic(ts_code=df.iloc[i_].ts_code, start_date=start_date.replace("-", ""), end_date=today.replace("-", ""))
+                income = pro.index_daily(ts_code=df.iloc[i_].ts_code,start_date=start_date.replace("-", ""), end_date=today.replace("-", ""))
             except Exception as e:
-                print(e)
                 time.sleep(30)
-                daily = self.api.daily_basic(ts_code=df.iloc[i_].ts_code, start_date=start_date.replace("-", ""), end_date=today.replace("-", ""))
-            print(" Get stock daily basic from tushare,days count is %d" % len(daily))
-            if not daily.empty:
-                # coll = client.stock_daily_basic_tushare
+                income = pro.index_daily(ts_code=df.iloc[i_].ts_code,start_date=start_date.replace("-", ""), end_date=today.replace("-", ""))
+            finally:
+                pass
+            print(" Get stock daily from tushare,reports count is %d" % len(income))
+            if not income.empty:
+                # coll = client.stock_report_income_tushare
                 # client.drop_collection(coll)
-                # odo(daily, stock_daily)
-                #json_data = QA_util_to_json_from_pandas(daily)
-                json_data = json.loads(daily.to_json(orient='records'))
-                stock_daily.insert_many(json_data)
-            print(" Save data to stock_daily_basic_tushare collection， OK")
+                json_data = json.loads(income.to_json(orient='records'))
+                report_income.insert_many(json_data)
+            print(" Save data to stock_daily_tushare collection， OK")
+
 
     def save_stock_daily(self,ind=0):
         '''
@@ -90,16 +176,17 @@ class FinDataSource(object):
             print("there is no stock info,stock count is %d" % len(df))
             return
         report_income = self.client.stock_daily_tushare
-        start_date = '20150101'
+
         today = datetime.datetime.now().strftime("%Y%m%d")
         print("##################get mainbz reports start####################")
         for i_ in range(ind,len(df.index)):
+            start_date = '20150101'
             print('The %s of Total %s' % (i_, len(df.index)))
             ref = report_income.find({'ts_code': df.iloc[i_].ts_code}).sort([('trade_date', -1)]).limit(1)
             if ref.count() > 0:
                 start_date = pd.date_range((ref[0]['trade_date']), periods=2, freq='1d').strftime('%Y%m%d').values[-1]  # 取最新日期的下一天，所以，永远只有插入，没有更新
                 print("start_date" + start_date.replace("-", "") + " today" + today.replace("-", ""))
-                if start_date.replace("-", "") > today.replace("-", ""):
+                if start_date.replace("-", "") >= today.replace("-", ""):
                     continue
             print('UPDATE stock daily basic Trying updating %s from %s to %s' % (df.iloc[i_].ts_code, start_date.replace("-", ""), today.replace("-", "")))
             time.sleep(self.INTERVAL)
@@ -140,17 +227,20 @@ class FinDataSource(object):
             print("there is no stock info,stock count is %d" % len(df))
             return
         report_income = self.client.stock_daily_adj_tushare
-        start_date = '20150101'
         today = datetime.datetime.now().strftime("%Y%m%d")
         print("##################get mainbz reports start####################")
         for i_ in range(len(df.index)):
+            start_date = '20100101'
             print('The %s of Total %s' % (i_, len(df.index)))
             ref = report_income.find({'ts_code': df.iloc[i_].ts_code}).sort([('trade_date', -1)]).limit(1)
             if ref.count() > 0:
-                start_date = pd.date_range((ref[0]['trade_date']), periods=2, freq='1d').strftime('%Y%m%d').values[ -1]  # 取最新日期的下一天，所以，永远只有插入，没有更新
-                print("start_date" + start_date.replace("-", "") + " today" + today.replace("-", ""))
-                if start_date.replace("-", "") > today.replace("-", ""):
-                    continue
+                if ref.count() < 200: #数量小于200条的删除重新拿，姑且这么做一把，做完后要删除此处逻辑
+                    report_income.remove({'ts_code': df.iloc[i_].ts_code})
+                else :
+                    start_date = pd.date_range((ref[0]['trade_date']), periods=2, freq='1d').strftime('%Y%m%d').values[ -1]  # 取最新日期的下一天，所以，永远只有插入，没有更新
+                    print("start_date" + start_date.replace("-", "") + " today" + today.replace("-", ""))
+                    if start_date.replace("-", "") >= today.replace("-", ""):
+                        continue
             print('UPDATE stock daily basic Trying updating %s from %s to %s' % (df.iloc[i_].ts_code, start_date.replace("-", ""), today.replace("-", "")))
             time.sleep(self.INTERVAL)
             try:
@@ -167,6 +257,50 @@ class FinDataSource(object):
                 json_data = json.loads(income.to_json(orient='records'))
                 report_income.insert_many(json_data)
             print(" Save data to stock_daily_adj_tushare collection， OK")
+
+    def save_stock_report_indicator(self,ind=0):
+        '''
+                上市公司财务指标数据
+            输出参数
+
+            名称	类型	描述
+            ts_code	str	股票代码
+            trade_date	str	交易日期
+            adj_factor	float	复权因子
+
+                        add by minijjlk
+
+                    在命令行工具 quantaxis 中输入 save stock_income 中的命令
+                    :param client:
+                    :return:
+                    '''
+        pro = ts.pro_api()
+        df = pro.stock_basic()
+        if df.empty:
+            print("there is no stock info,stock count is %d" % len(df))
+            return
+        report_income = self.client.stock_report_indicator_tushare
+        print("##################get income reports start####################")
+        for i_ in range(len(df.index)):
+            print('The %s of Total %s' % (i_, len(df.index)))
+            ref = report_income.find({'ts_code': df.iloc[i_].ts_code})
+            if ref.count() > 0:
+                report_income.remove({'ts_code': df.iloc[i_].ts_code})
+            print('UPDATE stock income Trying updating %s' % (df.iloc[i_].ts_code))
+            time.sleep(1)
+            try:
+                income = pro.income(ts_code=df.iloc[i_].ts_code)
+            except Exception as e:
+                time.sleep(30)
+                income = pro.income(ts_code=df.iloc[i_].ts_code)
+            print(" Get stock income reports from tushare,reports count is %d" % len(income))
+            if not income.empty:
+                # coll = client.stock_report_income_tushare
+                # client.drop_collection(coll)
+                json_data = json.loads(income.to_json(orient='records'))
+                report_income.insert_many(json_data)
+            print(" Save data to stock_report_income_tushare collection， OK")
+
 
     def save_stock_report_income(self,start_day='20010101'):
         '''
@@ -288,7 +422,7 @@ class FinDataSource(object):
                 report_income.insert_many(json_data)
             print(" Save data to stock_report_income_tushare collection， OK")
 
-    def save_stock_report_assetliability(self,start_day='20010101'):
+    def save_stock_report_assetliability(self,ind=0,start_day='20010101'):
         '''
         资产负债表数据
     输出参数
@@ -460,7 +594,7 @@ class FinDataSource(object):
             return
         report_income = self.client.stock_report_assetliability_tushare
         print("##################get asset liability reports start####################")
-        for i_ in range(len(df.index)):
+        for i_ in range(ind,len(df.index)):
             print('The %s of Total %s' % (i_, len(df.index)))
             ref = report_income.find({'ts_code': df.iloc[i_].ts_code})
             if ref.count() > 0:
@@ -480,7 +614,7 @@ class FinDataSource(object):
                 report_income.insert_many(json_data)
             print(" Save data to stock_report_assetliability_tushare collection， OK")
 
-    def save_stock_report_cashflow(self,start_day='20010101'):
+    def save_stock_report_cashflow(self,ind=0,start_day='20010101'):
         '''
         现金流表数据
     输出参数
@@ -605,7 +739,7 @@ class FinDataSource(object):
             return
         report_income = self.client.stock_report_cashflow_tushare
         print("##################get asset cashflow reports start####################")
-        for i_ in range(len(df.index)):
+        for i_ in range(ind,len(df.index)):
             print('The %s of Total %s' % (i_, len(df.index)))
             ref = report_income.find({'ts_code': df.iloc[i_].ts_code})
             if ref.count() > 0:
@@ -760,7 +894,7 @@ class FinDataSource(object):
                 report_income.insert_many(json_data)
             print(" Save data to stock_report_express_tushare collection， OK")
 
-    def QA_SU_save_stock_report_dividend(self,start_day='20010101'):
+    def save_stock_report_dividend(self,start_day='20010101'):
         '''
         分红送股数据
     输出参数
@@ -821,34 +955,51 @@ class FinDataSource(object):
         return self.api.stock_basic()
 
     def get_index_daily(self,start, end, code=None):
-        query = {"date": {
+        start = start.replace('-', '')
+        end = end.replace('-', '')
+        query = {"trade_date": {
             "$lte": end,
             "$gte": start}}
         if code:
-            query['code'] = {'$in': code}
-        cursor = self.client.index_day.find(query, {"_id": 0}, batch_size=10000).sort([("code",1),("date",1)])
-        return pd.DataFrame([item for item in cursor])
+            query['ts_code'] = {'$in': code}
+        cursor = self.client.index_daily_tushare.find(query, {"_id": 0}, batch_size=10000)
+        df = pd.DataFrame([item for item in cursor])
+        if df.shape[0] > 0:
+            df.sort_values(['ts_code', 'trade_date'], ascending=True)
+        return df
 
 
     def get_stock_daily(self,start, end, code=None):
-        query = {"date": {
+        start = start.replace('-','')
+        end = end.replace('-', '')
+        query = {"trade_date": {
             "$lte": end,
             "$gte": start}}
         if code:
-            query['code'] = {'$in': code}
-        cursor = self.client.stock_day.find(query, {"_id": 0}, batch_size=10000)
-        return pd.DataFrame([item for item in cursor]).sort_values(['code', 'date'], ascending=True)
+            query['ts_code'] = {'$in': code}
+        cursor = self.client.stock_daily_tushare.find(query, {"_id": 0}, batch_size=10000)
+        df = pd.DataFrame([item for item in cursor])
+        if df.shape[0] > 0:
+            df.sort_values(['ts_code', 'trade_date'], ascending=True)
+        return df
 
     def get_stock_daily_basic(self,start, end, code=None):
+        start = start.replace('-', '')
+        end = end.replace('-', '')
         query = {"trade_date": {
             "$lte": end,
             "$gte": start}}
         if code:
             query['ts_code'] = {'$in': code}
         cursor = self.client.stock_daily_basic_tushare.find(query, {"_id": 0}, batch_size=10000)  # .sort([("ts_code",1),("trade_date",1)])
-        return pd.DataFrame([item for item in cursor]).sort_values(['ts_code', 'trade_date'], ascending=True)
+        df = pd.DataFrame([item for item in cursor])
+        if df.shape[0] > 0:
+            df.sort_values(['ts_code', 'trade_date'], ascending=True)
+        return df
 
     def get_assetAliability(self,start, end, code=None):
+        start = start.replace('-', '')
+        end = end.replace('-', '')
         query = {"end_date": {
             "$lte": end,
             "$gte": start}}
@@ -856,9 +1007,14 @@ class FinDataSource(object):
             query['ts_code'] = {'$in': code}
         cursor = self.client.sstock_report_assetliability_tushare.find(query, {"_id": 0}, batch_size=10000)  # .sort([("ts_code",1),("end_date",1)])
 
-        return pd.DataFrame([item for item in cursor]).sort_values(['ts_code', 'end_date'], ascending=True)
+        df = pd.DataFrame([item for item in cursor])
+        if df.shape[0] > 0:
+            df.sort_values(['ts_code', 'end_date'], ascending=True)
+        return df
 
     def get_cashflow(self,start, end, code=None):
+        start = start.replace('-', '')
+        end = end.replace('-', '')
         query = {"end_date": {
             "$lte": end,
             "$gte": start}}
@@ -867,9 +1023,14 @@ class FinDataSource(object):
         cursor = self.client.stock_report_cashflow_tushare.find(query, {"_id": 0}, batch_size=10000)  # .sort([("ts_code",1),("end_date",1)])
         # df = pd.DataFrame([item for item in cursor])
         # print(df.head())
-        return pd.DataFrame([item for item in cursor]).sort_values(['ts_code', 'end_date'], ascending=True)
+        df = pd.DataFrame([item for item in cursor])
+        if df.shape[0] > 0:
+            df.sort_values(['ts_code', 'end_date'], ascending=True)
+        return df
 
     def get_income(self,start, end, code=None):
+        start = start.replace('-', '')
+        end = end.replace('-', '')
         query = {"end_date": {
             "$lte": end,
             "$gte": start}}
@@ -877,10 +1038,15 @@ class FinDataSource(object):
             query['ts_code'] = {'$in': code}
         cursor = self.client.stock_report_income_tushare.find(query, {"_id": 0}, batch_size=10000)  # .sort([("ts_code",1),("end_date",1)])
 
-        return pd.DataFrame([item for item in cursor]).sort_values(['ts_code', 'end_date'], ascending=True)
+        df = pd.DataFrame([item for item in cursor])
+        if df.shape[0] > 0:
+            df.sort_values(['ts_code', 'end_date'], ascending=True)
+        return df
 
 
     def get_daily_adj(self,start, end, code=None):
+        start = start.replace('-', '')
+        end = end.replace('-', '')
         query = {"trade_date": {
             "$lte": end,
             "$gte": start}}
@@ -888,9 +1054,13 @@ class FinDataSource(object):
             query['ts_code'] = {'$in': code}
         cursor = self.client.stock_daily_adj_tushare.find(query, {"_id": 0}, batch_size=10000)  # .sort([("ts_code",1),("trade_date",1)])
 
-        return pd.DataFrame([item for item in cursor]).sort_values(['ts_code', 'trade_date'], ascending=True)
+        df = pd.DataFrame([item for item in cursor])
+        if df.shape[0] > 0:
+            df.sort_values(['ts_code', 'trade_date'], ascending=True)
 
     def get_money_flow(self,start, end, code=None):
+        start = start.replace('-', '')
+        end = end.replace('-', '')
         query = {"trade_date": {
             "$lte": end,
             "$gte": start}}
@@ -898,15 +1068,19 @@ class FinDataSource(object):
             query['ts_code'] = {'$in': code}
         cursor = self.client.stock_daily_moneyflow_tushare.find(query, {"_id": 0}, batch_size=10000)  # .sort([("ts_code",1),("trade_date",1)])
 
-        return pd.DataFrame([item for item in cursor]).sort_values(['ts_code', 'trade_date'], ascending=True)
+        df = pd.DataFrame([item for item in cursor])
+        if df.shape[0] > 0:
+            df.sort_values(['ts_code', 'trade_date'], ascending=True)
 
     def get_finindicator(self,start, end, code=None):
+        start = start.replace('-', '')
+        end = end.replace('-', '')
         query = {"end_date": {
             "$lte": end,
             "$gte": start}}
         if code:
             query['ts_code'] = {'$in': code}
-        cursor = self.client.stock_report_finindicator_tushare.find(query, {"_id": 0}, batch_size=10000)  # .sort([("ts_code",1),("end_date",1)])
+        cursor = self.client.stock_finindicator_tushare.find(query, {"_id": 0}, batch_size=10000)  # .sort([("ts_code",1),("end_date",1)])
         data = []
         i = 0
         for post in cursor:

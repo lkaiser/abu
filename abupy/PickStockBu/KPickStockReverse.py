@@ -3,8 +3,8 @@ from .ABuPickStockBase import AbuPickStockBase, reversed_result
 
 __author__ = 'K'
 
-class KPickStockValue(AbuPickStockBase):
-    """白马选择指标，选取毛利率>35% 且近两年平均 roe> 15%的个股，且近2毛利率趋势至少不下降吧，近3年现金流利润比不能低于70%"""
+class KPickStockReverse(AbuPickStockBase):
+    """反转指标，选取毛利率连续2个季度以上提升（提升幅度阈值），营收、扣非净利润提升的个股，且历史业绩优秀（过去5年有至少2年roe_dt > 15%）"""
     def _init_self(self, **kwargs):
         """通过kwargs设置位条件，配置因子参数"""
         self.start = kwargs['start']
