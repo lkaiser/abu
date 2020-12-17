@@ -4,6 +4,7 @@ from .ABuPickStockBase import AbuPickStockBase
 from ..SimilarBu.ABuCorrcoef import ECoreCorrType, corr_xy
 import datetime
 import pandas as pd
+import numpy as np
 import logging
 
 from ..TLineBu.ABuTLine import AbuTLine
@@ -30,7 +31,6 @@ class KPickStockStrongShake(AbuPickStockBase):
         self.short_relation = kwargs['short_relation'] if 'short_relation' in kwargs else None
         self.short_shake = kwargs['short_shake'] if 'short_shake' in kwargs else None
         self.shift_distance = kwargs['shift_distance'] if 'shift_distance' in kwargs else None
-        #self.short_range_deg_diff = kwargs['short_range_deg_diff'] if 'short_range_deg_diff' in kwargs else None
         self.short_range_deg = kwargs['short_range_deg'] if 'short_range_deg' in kwargs else None
         self.start = kwargs['start']
         self.end = kwargs['end']
@@ -73,11 +73,16 @@ class KPickStockStrongShake(AbuPickStockBase):
                 #pre_close = kl.close.shift(1).values
                 #pre_close[0] = pre_close[1]
                 #kl.loc[:,'rise'] = ((kl.close/pre_close-1)*100).round(2)
-                dic['short_range_deg'] = round(ABuRegUtil.calc_regress_deg(kl.adj_close,show=False),4)
+                model, _ = ABuRegUtil.regress_y(kl.adj_close, mode=True, zoom=True, show=False)
+                rad = model.params[1]
+                dic['short_range_deg'] = round(np.rad2deg(rad),4) #两种思路， 1 要求至少最近20天符合某种趋势，则称为短期角度 2 拟合曲线，找到最近拐点，距今超过20天也可以
+                dic['short_range_rsquare'] = model.rsquared
                 dic['short_range_shake'] = ((kl.high-kl.low)/kl.low).mean()
                 #benchmark_rise = ((d_index.close/d_index.pre_close-1)*100).round(2)
-                relation_arr = [round(corr_xy(df.iloc[-(self.short_range+i):-i].rise.values, df.iloc[-(self.short_range+i):-i].benchmark_rise.values, ECoreCorrType.E_CORE_TYPE_PEARS), 4) for i in range(1,20)]
-                dic['short_range_relation'] = min(relation_arr) #前20天的relaition 取最小值，因为 relation主要是取30天的，已经做了平滑处理，再取前20天是因为信号不是一出来就有机会，后续需要根据位置判断
+                cor_count = 10 if 10<=(df.shape[0]-kl.shape[0]) else (df.shape[0]-kl.shape[0])
+                print('########## cor_count = {}'.format(cor_count))
+                relation_arr = [round(corr_xy(df.iloc[-(kl.shape[0]+i):-i].rise.values, df.iloc[-(kl.shape[0]+i):-i].benchmark_rise.values, ECoreCorrType.E_CORE_TYPE_PEARS), 4) for i in range(1,cor_count)]
+                dic['short_range_relation'] = min(relation_arr) if relation_arr else None #前20天的relaition 取最小值，因为 relation主要是取30天的，已经做了平滑处理，再取前20天是因为信号不是一出来就有机会，后续需要根据位置判断
                 #dic['short_range_relation'] = round(corr_xy(kl.rise,benchmark_rise,ECoreCorrType.E_CORE_TYPE_PEARS),4)
                 pick_line = AbuTLine(kl.close, 'shift distance')
                 dic['shift_distance'] = pick_line.show_shift_distance(step_x=1.0, show_log=False, show=False)[4]
@@ -85,18 +90,16 @@ class KPickStockStrongShake(AbuPickStockBase):
                 dic['short_range_rise'] = (kl.iloc[id].adj_close-kl.iloc[0:id].adj_close.min())/kl.iloc[0:id].adj_close.min()
                 lid = lkl.adj_close.idxmax()
                 dic['long_range_rise'] = (lkl.iloc[lid].adj_close - lkl.iloc[0:lid].adj_close.min()) / lkl.iloc[0:lid].adj_close.min()
-            return pd.Series(dic)
+                return pd.Series(dic)
         trend_status = daily.groupby('ts_code').apply(_trend)
-        trend_status = trend_status[~trend_status.short_range_shake.isnull()]
-        print(trend_status.describe())
-        #benchmark_deg = round(ABuRegUtil.calc_regress_deg(self.benchmark.kl_pd[(self.benchmark.kl_pd.date>sdate) & (self.benchmark.kl_pd.date<=self.end)].close,show=False),4)
-        #trend_status.loc[:,'short_range_deg_diff'] = trend_status['short_range_deg']-benchmark_deg
-        trend_status = trend_status[(trend_status.long_range_rise<self.long_scope) & (trend_status.short_range_rise<self.short_scope)]
-        if self.short_relation is not None:
-            trend_status = trend_status[trend_status.short_range_relation < self.short_relation]
-        if self.short_shake is not None:
-            trend_status = trend_status[trend_status.short_range_shake > self.short_shake]
-        if self.short_range_deg is not None:
-            trend_status = trend_status[(trend_status.short_range_deg < (self.short_range_deg+2)) & (trend_status.short_range_rise > (self.short_scope-2))] #选取符合短期趋势+-2°范围的
-        print(trend_status.head())
+        if trend_status.shape[0] >0:
+            print(trend_status.describe())
+            trend_status = trend_status[~trend_status.short_range_shake.isnull()]
+            trend_status = trend_status[(trend_status.long_range_rise<self.long_scope) & (trend_status.short_range_rise<self.short_scope)]
+            if self.short_relation is not None:
+                trend_status = trend_status[trend_status.short_range_relation < self.short_relation]
+            if self.short_shake is not None:
+                trend_status = trend_status[trend_status.short_range_shake > self.short_shake]
+            if self.short_range_deg is not None:
+                trend_status = trend_status[(trend_status.short_range_deg < (self.short_range_deg+2)) & (trend_status.short_range_rise > (self.short_scope-2))] #选取符合短期趋势+-2°范围的,且判定系数大于0.7 这样至少大致能拟合出条直线的那种图形
         return trend_status.index.values.tolist()
