@@ -48,6 +48,7 @@ class KFinManager(object):
         key = start+'-'+end
         if key in self.fin_cache:
             return self.fin_cache.get(key)
+        #按时间降序取数据，这样下面在进行近2年，3年指标计算式，保证计算到的是从当前时间节点往前推的数据
         fin = self.get_finindicator(start,end).sort_values(['ts_code', 'end_date'], ascending=False)
 
         def _value_worth(df):

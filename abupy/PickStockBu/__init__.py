@@ -8,6 +8,7 @@ from .ABuPickStockDemo import AbuPickStockShiftDistance, AbuPickStockNTop
 from . import ABuPickStock as ps
 from .KPickStockValue import KPickStockValue
 from .KPickStockStrongShake import KPickStockStrongShake
+from .KPickStockVolume import KPickStockVolume
 
 __all__ = [
     'AbuPickRegressAngMinMax',
